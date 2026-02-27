@@ -38,3 +38,11 @@ function createSeededRand(seed) {
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = { rand, clamp, lerp, lerpColor, genCode, createSeededRand };
 }
+
+// Global exports for browser
+window.rand = rand;
+window.clamp = clamp;
+window.lerp = lerp;
+window.lerpColor = lerpColor;
+window.genCode = genCode;
+window.createSeededRand = createSeededRand;
