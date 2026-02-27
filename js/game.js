@@ -727,3 +727,11 @@ if (typeof module !== 'undefined' && module.exports) {
     screenShake
   };
 }
+
+// Global exports for browser
+window.setupInput = setupInput;
+window.initGame = initGame;
+window.update = update;
+window.killPlayer = killPlayer;
+window.spawnParticles = spawnParticles;
+window.screenShake = screenShake;

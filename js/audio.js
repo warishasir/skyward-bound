@@ -83,3 +83,7 @@ function playSound(type) {
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = { initAudio, playSound };
 }
+
+// Global exports for browser
+window.initAudio = initAudio;
+window.playSound = playSound;
