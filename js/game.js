@@ -1,8 +1,18 @@
 // Game Engine Module
 
-const canvas = document.getElementById('canvas');
-const ctx = canvas.getContext('2d');
+let canvas, ctx;
 const W = 480, H = 640;
+
+function initCanvas() {
+  if (!canvas) {
+    canvas = document.getElementById('canvas');
+    if (canvas) {
+      ctx = canvas.getContext('2d');
+    }
+  }
+  return canvas && ctx;
+}
+
 
 // Game state
 let players = [];
@@ -187,6 +197,11 @@ function generatePlatforms(upToY) {
 }
 
 function initGame() {
+  if (!initCanvas()) {
+    console.error('Canvas not found!');
+    return;
+  }
+
   platforms.length = 0;
   coins.length = 0;
   powerupItems.length = 0;
@@ -609,6 +624,8 @@ function killPlayer(pl) {
 
 function update(dt) {
   if (!gameRunning) return;
+  if (!ctx) return;
+
 
   if (activePowerups.slowtime) gameSpeed = lerp(gameSpeed, 0.4, 0.05);
   else gameSpeed = lerp(gameSpeed, 1, 0.08);
@@ -735,3 +752,5 @@ window.update = update;
 window.killPlayer = killPlayer;
 window.spawnParticles = spawnParticles;
 window.screenShake = screenShake;
+window.getCanvas = () => canvas;
+window.getCtx = () => ctx;
