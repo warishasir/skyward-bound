@@ -345,3 +345,13 @@ if (typeof module !== 'undefined' && module.exports) {
     get netConnected() { return netConnected; }
   };
 }
+
+// Global exports for browser onclick handlers
+window.hostGame = hostGame;
+window.joinGame = joinGame;
+window.setNetCallbacks = setNetCallbacks;
+window.netSend = netSend;
+window.netDisconnect = netDisconnect;
+window.sendNetState = sendNetState;
+window.sendNetDie = sendNetDie;
+window.cleanupNetwork = cleanupNetwork;
