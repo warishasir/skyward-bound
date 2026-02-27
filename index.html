@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Skyward Bound</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div id="gameWrapper">
+  <canvas id="canvas" width="480" height="640"></canvas>
+  <div id="networkIndicator">🌐 Online</div>
+
+  <!-- Mobile Touch Controls -->
+  <div id="touchControls">
+    <div class="touch-btn" id="touchLeft">←</div>
+    <div class="touch-btn" id="touchRight">→</div>
+    <div class="touch-btn" id="touchJump">⬆</div>
+  </div>
+
+  <!-- ONLINE LOBBY SCREEN -->
+  <div id="onlineLobby" class="hidden">
+    <div class="lobby-title">🌐 ONLINE MATCH</div>
+    <div class="lobby-sub">Connect two players across the internet</div>
+
+    <div class="lobby-section">
+      <h3>🔵 Host — Create Room</h3>
+      <div class="lobby-status" id="hostStatus">Click to generate your room code</div>
+      <div id="codeWrap" style="display:none">
+        <div class="code-display" id="myCode">----</div>
+        <button class="copy-btn" onclick="copyCode()">Copy</button>
+      </div>
+      <button class="btn-sm" id="hostBtn" onclick="hostGameWrapper()">Generate Code</button>
+    </div>
+
+    <div style="color:#334;font-size:11px;letter-spacing:2px">— OR —</div>
+
+    <div class="lobby-section">
+      <h3>🔴 Join — Enter Room Code</h3>
+      <input class="lobby-input" id="joinCodeInput" maxlength="4" placeholder="XXXX" oninput="this.value=this.value.toUpperCase()">
+      <br>
+      <button class="btn-sm" id="joinBtn" onclick="joinGameWrapper()">Join Game</button>
+      <div class="lobby-status" id="joinStatus"></div>
+    </div>
+
+    <button class="btn-sm" style="background:rgba(255,255,255,0.08);color:#7df0ff;border:1px solid rgba(125,240,255,0.2);margin-top:4px" onclick="closeLobby()">← Back to Local</button>
+  </div>
+
+  <div id="hud">
+    <div class="hud-box" style="border-left:3px solid #7df0ff">
+      <div class="hud-label" style="color:#7df0ff">P1 🔵</div>
+      <div class="hud-val" id="heightVal">0m</div>
+    </div>
+    <div class="hud-box" style="text-align:center">
+      <div class="hud-label">Best</div>
+      <div class="hud-val" id="bestVal">0m</div>
+    </div>
+    <div class="hud-box" style="text-align:right;border-right:3px solid #ff7070">
+      <div class="hud-label" style="color:#ff9090">P2 🔴</div>
+      <div class="hud-val" id="height2Val">0m</div>
+    </div>
+  </div>
+
+  <div id="comboDisplay"></div>
+  <div id="powerupHud"></div>
+  <div id="chargeBar"><div id="chargeBarFill"></div></div>
+
+  <div id="controls-hint">
+    P1: ← → + SPACE &nbsp;|&nbsp; P2: A D + W
+  </div>
+
+  <div id="overlay">
+    <div class="overlay-title">SKYWARD</div>
+    <div class="overlay-title" style="margin-top:-12px">BOUND</div>
+    <div class="overlay-sub">2 PLAYERS • ROCKETS AT HIGH ALTITUDE</div>
+    <div class="stat-row" id="statRow" style="display:none">
+      <div class="stat-box" style="border-color:rgba(125,240,255,0.4)">
+        <div class="stat-num" id="endWinner" style="font-size:20px">—</div>
+        <div class="stat-lbl">Winner</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num" id="endHeight">0</div>
+        <div class="stat-lbl">P1 Height</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num" id="endHeight2">0</div>
+        <div class="stat-lbl">P2 Height</div>
+      </div>
+    </div>
+    <div class="new-best" id="newBest" style="display:none">🏆 NEW BEST!</div>
+    <button class="btn" id="playBtn">PLAY LOCAL</button>
+    <button class="btn" id="onlineBtn" style="background:rgba(125,240,255,0.1);color:#7df0ff;border:1px solid rgba(125,240,255,0.3);box-shadow:none;margin-top:2px">🌐 PLAY ONLINE</button>
+    <div style="color:#4a7a8a;font-size:12px;margin-top:16px;text-align:center;line-height:2">
+      🔵 P1: ← → move &nbsp;•&nbsp; SPACE jump / hold to charge<br>
+      🔴 P2: A D move &nbsp;•&nbsp; W jump / hold to charge<br>
+      🚀 Rockets appear above 500m — dodge them!
+    </div>
+  </div>
+</div>
+
+<!-- Game Modules -->
+<script src="js/utils.js"></script>
+<script src="js/config.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/network.js"></script>
+<script src="js/game.js"></script>
+<script src="js/renderer.js"></script>
+<script src="js/main.js"></script>
+
+<script>
+// Wrapper functions for onclick handlers
+function hostGameWrapper() {
+  const code = genCode();
+  document.getElementById('myCode').textContent = code;
+  document.getElementById('codeWrap').style.display = 'block';
+  document.getElementById('hostBtn').disabled = true;
+  hostGame(code, setHostStatus);
+}
+
+function joinGameWrapper() {
+  const code = document.getElementById('joinCodeInput').value.trim().toUpperCase();
+  if (code.length !== 4) {
+    setJoinStatus('Enter a 4-letter code', 'err');
+    return;
+  }
+  document.getElementById('joinBtn').disabled = true;
+  joinGame(code, setJoinStatus);
+}
+</script>
+
+</body>
+</html>
