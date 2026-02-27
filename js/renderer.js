@@ -65,9 +65,10 @@ function drawCloudShape(ctx, x, y, w) {
   ctx.fill();
 }
 
-function drawPlatform(ctx, p, camY, PLAT_COLORS) {
+function drawPlatform(ctx, p, camY, PLAT_COLORS, H) {
   const drawY = p.y - camY;
   if (drawY < -20 || drawY > H + 20) return;
+
   const c = PLAT_COLORS[p.type];
   const shake = p.breakTimer > 0 ? (p.breakTimer % 4 < 2 ? 2 : -2) : 0;
 
@@ -114,9 +115,10 @@ function drawPlatform(ctx, p, camY, PLAT_COLORS) {
   ctx.restore();
 }
 
-function drawCoin(ctx, c, camY) {
+function drawCoin(ctx, c, camY, H) {
   const y = c.y - camY + Math.sin(c.bob) * 4;
   if (y < -20 || y > H + 20) return;
+
   ctx.save();
   ctx.fillStyle = c.type === 'gem' ? '#a78fff' : c.type === 'gold' ? '#ffd700' : '#ffe066';
   ctx.strokeStyle = c.type === 'gem' ? '#7755dd' : c.type === 'gold' ? '#cc9900' : '#ccaa00';
@@ -141,9 +143,10 @@ function drawCoin(ctx, c, camY) {
   ctx.restore();
 }
 
-function drawPowerupItem(ctx, p, camY, getPowerupColor, getPowerupEmoji) {
+function drawPowerupItem(ctx, p, camY, getPowerupColor, getPowerupEmoji, H) {
   const y = p.y - camY + Math.sin(p.bob) * 5;
   if (y < -20 || y > H + 20) return;
+
   ctx.save();
   ctx.globalAlpha = 0.9;
   const color = getPowerupColor(p.type);
@@ -363,9 +366,10 @@ function render(ctx, W, H, cameraY, maxHeight, frameCount, gameState) {
   }
   ctx.restore();
 
-  for (const p of platforms) drawPlatform(ctx, p, cameraY, CONFIG.PLAT_COLORS);
-  for (const c of coins) drawCoin(ctx, c, cameraY);
-  for (const p of powerupItems) drawPowerupItem(ctx, p, cameraY, getPowerupColor, getPowerupEmoji);
+  for (const p of platforms) drawPlatform(ctx, p, cameraY, CONFIG.PLAT_COLORS, H);
+  for (const c of coins) drawCoin(ctx, c, cameraY, H);
+  for (const p of powerupItems) drawPowerupItem(ctx, p, cameraY, getPowerupColor, getPowerupEmoji, H);
+
 
   drawRockets(ctx, rockets, cameraY, W, H, frameCount);
 
