@@ -89,8 +89,9 @@
       </div>
     </div>
     <div class="new-best" id="newBest" style="display:none">🏆 NEW BEST!</div>
-    <button class="btn" id="playBtn">PLAY LOCAL</button>
-    <button class="btn" id="onlineBtn" style="background:rgba(125,240,255,0.1);color:#7df0ff;border:1px solid rgba(125,240,255,0.3);box-shadow:none;margin-top:2px">🌐 PLAY ONLINE</button>
+    <button class="btn" id="playBtn" onclick="playLocal()">PLAY LOCAL</button>
+    <button class="btn" id="onlineBtn" onclick="openLobby()" style="background:rgba(125,240,255,0.1);color:#7df0ff;border:1px solid rgba(125,240,255,0.3);box-shadow:none;margin-top:2px">🌐 PLAY ONLINE</button>
+
     <div style="color:#4a7a8a;font-size:12px;margin-top:16px;text-align:center;line-height:2">
       🔵 P1: ← → move &nbsp;•&nbsp; SPACE jump / hold to charge<br>
       🔴 P2: A D move &nbsp;•&nbsp; W jump / hold to charge<br>
@@ -110,7 +111,17 @@
 
 <script>
 // Wrapper functions for onclick handlers
+function playLocal() {
+  console.log('Play Local clicked');
+  isOnline = false;
+  initAudio();
+  initGame();
+  document.getElementById('overlay').classList.add('hidden');
+  document.getElementById('controls-hint').textContent = 'P1: ← → + SPACE  |  P2: A D + W';
+}
+
 function hostGameWrapper() {
+
   const code = genCode();
   document.getElementById('myCode').textContent = code;
   document.getElementById('codeWrap').style.display = 'block';
