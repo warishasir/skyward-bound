@@ -182,3 +182,11 @@ function loop(ts) {
 setupInput();
 showOverlay(false);
 requestAnimationFrame(loop);
+
+// Global exports for HTML onclick handlers
+window.setHostStatus = setHostStatus;
+window.setJoinStatus = setJoinStatus;
+window.copyCode = copyCode;
+window.openLobby = openLobby;
+window.closeLobby = closeLobby;
+window.startOnlineGame = startOnlineGame;
