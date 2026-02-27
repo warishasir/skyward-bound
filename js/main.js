@@ -186,15 +186,28 @@ function loop(ts) {
   lastTime = ts;
   update(dt);
   
+  // Get canvas context from game module
+  const gameCtx = getCtx();
+  if (!gameCtx) {
+    requestAnimationFrame(loop);
+    return;
+  }
+  
+  // Get current game state values
+  const currentCameraY = typeof cameraY !== 'undefined' ? cameraY : 0;
+  const currentMaxHeight = typeof maxHeight !== 'undefined' ? maxHeight : 0;
+  const currentFrameCount = typeof frameCount !== 'undefined' ? frameCount : 0;
+  
   // Render
   const gameState = {
     platforms, coins, powerupItems, rockets, particles, floatTexts, players,
     cloudData, activePowerups
   };
-  render(ctx, W, H, cameraY, maxHeight, frameCount, gameState);
+  render(gameCtx, 480, 640, currentCameraY, currentMaxHeight, currentFrameCount, gameState);
   
   requestAnimationFrame(loop);
 }
+
 
 // Initialize
 setupInput();
