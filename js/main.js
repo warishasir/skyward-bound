@@ -123,18 +123,36 @@ function handleNetMsg(msg) {
   }
 }
 
-// Setup event listeners
-document.getElementById('playBtn').addEventListener('click', () => {
-  isOnline = false;
-  initAudio();
-  initGame();
-  document.getElementById('overlay').classList.add('hidden');
-  document.getElementById('controls-hint').textContent = 'P1: ← → + SPACE  |  P2: A D + W';
-});
+// Setup event listeners - wrap in DOMContentLoaded to ensure DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', setupEventListeners);
+} else {
+  setupEventListeners();
+}
 
-document.getElementById('onlineBtn').addEventListener('click', () => {
-  openLobby();
-});
+function setupEventListeners() {
+  const playBtn = document.getElementById('playBtn');
+  const onlineBtn = document.getElementById('onlineBtn');
+  
+  if (playBtn) {
+    playBtn.addEventListener('click', () => {
+      console.log('Play Local clicked');
+      isOnline = false;
+      initAudio();
+      initGame();
+      document.getElementById('overlay').classList.add('hidden');
+      document.getElementById('controls-hint').textContent = 'P1: ← → + SPACE  |  P2: A D + W';
+    });
+  }
+  
+  if (onlineBtn) {
+    onlineBtn.addEventListener('click', () => {
+      console.log('Play Online clicked');
+      openLobby();
+    });
+  }
+}
+
 
 // Network callbacks
 setNetCallbacks({
