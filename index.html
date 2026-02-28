@@ -1971,6 +1971,9 @@
         document.getElementById('playAgainBtn').style.display = 'none';
         document.getElementById('backToMenuBtn').style.display = 'none';
         document.getElementById('controlsText').style.display = 'block';
+        // Restore original RNG
+        window.rand = (a, b) => a + Math.random() * (b - a);
+
         highScore = parseInt(localStorage.getItem('skyward_best') || '0');
         document.getElementById('bestVal').textContent = highScore + 'm';
       }
@@ -2121,29 +2124,36 @@
       return url.toString();
     }
 
-    // ── Connect to signaling WS ──────────────────────────────────────────
-    function connectSignal(room, onReady, onMsg, onErr) {
-      // Try multiple free public signaling endpoints
-      const servers = [
-        `wss://socketsbay.com/wss/v2/1/${room}/`,
-        `wss://ws.ifelse.io`
-      ];
+    // ── Connect to signaling (via ntfy.sh) ────────────────────────────────
+    const MY_ID = Math.random().toString(36).substr(2, 9);
 
-      let tried = 0;
-      function tryNext() {
-        if (tried >= servers.length) { onErr('No signaling server reachable'); return; }
-        const url = servers[tried++];
-        const ws = new WebSocket(url);
-        ws.onopen = () => { sigWS = ws; onReady(ws); };
-        ws.onmessage = e => {
-          try { const d = JSON.parse(e.data); if (d.room === room || !d.room) onMsg(d); } catch (_) { }
-        };
-        ws.onerror = () => tryNext();
-        ws.onclose = () => {
-          if (isOnline && gameRunning) { netDisconnect(); }
-        };
-      }
-      tryNext();
+    function connectSignal(room, onReady, onMsg, onErr) {
+      const topic = `skybound_${room}`;
+      const ws = new WebSocket(`wss://ntfy.sh/${topic}/ws`);
+
+      ws.onopen = () => { sigWS = ws; onReady(ws); };
+      ws.onmessage = e => {
+        try {
+          const d = JSON.parse(e.data);
+          if (d.event === 'message' && d.message) {
+            const msg = JSON.parse(d.message);
+            if (msg.sender !== MY_ID) onMsg(msg);
+          }
+        } catch (_) { }
+      };
+      ws.onerror = () => onErr('Relay connection failed');
+      ws.onclose = () => {
+        if (isOnline && gameRunning) { netDisconnect(); }
+      };
+    }
+
+    function sendSignal(room, msg) {
+      msg.sender = MY_ID;
+      const topic = `skybound_${room}`;
+      fetch(`https://ntfy.sh/${topic}`, {
+        method: 'POST',
+        body: JSON.stringify(msg)
+      }).catch(() => { });
     }
 
     // ── Host flow ────────────────────────────────────────────────────────
@@ -2161,23 +2171,23 @@
       setupDataChannel(rtcChan);
 
       rtcPeer.onicecandidate = e => {
-        if (e.candidate && sigWS && sigWS.readyState === 1) {
-          sigWS.send(JSON.stringify({ room: code, type: 'ice', ice: e.candidate }));
+        if (e.candidate && isOnline) {
+          sendSignal(code, { type: 'ice', ice: e.candidate });
         }
       };
 
       connectSignal(code,
         async (ws) => {
-          setHostStatus('✅ Ready! Share code with friend →', 'ok');
+          setHostStatus('✅ Ready! Share link with friend →', 'ok');
+          isOnline = true; // Allow sending candidates
           // Create offer
           const offer = await rtcPeer.createOffer();
           await rtcPeer.setLocalDescription(offer);
-          // Don't send offer yet — wait for joiner to signal they're ready
         },
         async (msg) => {
           if (msg.type === 'ready') {
             // Joiner is listening — send our offer
-            sigWS.send(JSON.stringify({ room: code, type: 'offer', sdp: rtcPeer.localDescription }));
+            sendSignal(code, { type: 'offer', sdp: rtcPeer.localDescription });
             setHostStatus('🔵 Friend found! Connecting...', 'wait');
           }
           if (msg.type === 'answer') {
@@ -2208,16 +2218,17 @@
       };
 
       rtcPeer.onicecandidate = e => {
-        if (e.candidate && sigWS && sigWS.readyState === 1) {
-          sigWS.send(JSON.stringify({ room: code, type: 'ice', ice: e.candidate }));
+        if (e.candidate && isOnline) {
+          sendSignal(code, { type: 'ice', ice: e.candidate });
         }
       };
 
       connectSignal(code,
         (ws) => {
           setJoinStatus('✅ Relay connected! Waiting for host...', 'ok');
+          isOnline = true;
           // Tell host we're ready
-          ws.send(JSON.stringify({ room: code, type: 'ready' }));
+          sendSignal(code, { type: 'ready' });
         },
         async (msg) => {
           if (msg.type === 'offer') {
@@ -2225,7 +2236,7 @@
             await rtcPeer.setRemoteDescription(new RTCSessionDescription(msg.sdp));
             const answer = await rtcPeer.createAnswer();
             await rtcPeer.setLocalDescription(answer);
-            sigWS.send(JSON.stringify({ room: code, type: 'answer', sdp: rtcPeer.localDescription }));
+            sendSignal(code, { type: 'answer', sdp: rtcPeer.localDescription });
           }
           if (msg.type === 'ice' && msg.ice) {
             try { await rtcPeer.addIceCandidate(new RTCIceCandidate(msg.ice)); } catch (_) { }
@@ -2324,9 +2335,9 @@
       initAudio();
       initGame();
 
-      // If online, keep the seeded RNG active for all subsequent rand() calls
-      // (Don't restore origRand until game ends or disconnects)
-      if (!isOnline) window.rand = origRand;
+      // Keep the seeded RNG active while the game is running
+      // It will be restored in showOverlay()
+      window.rand = seededRand;
 
       updateTouchLayout();
 
