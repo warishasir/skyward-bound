@@ -1958,9 +1958,8 @@
           document.getElementById('endHeightLbl').textContent = 'P1 Height';
           document.getElementById('endHeight2').textContent = p2.maxHeight + 'm';
           document.getElementById('newBest').style.display = maxHeight >= highScore ? 'block' : 'none';
-          document.getElementById('playAgainBtn').textContent = isOnline ? '▶ PLAY AGAIN (LOCAL)' : '▶ PLAY AGAIN';
+          document.getElementById('playAgainBtn').textContent = isOnline ? '▶ REMATCH' : '▶ PLAY AGAIN';
         }
-        isOnline = false;
       } else {
         // Title screen
         document.getElementById('overlayTitle').textContent = 'SKYWARD';
@@ -2292,6 +2291,10 @@
         const remote = isHost ? p2 : p1;
         if (remote && !remote.dead) killPlayer(remote);
       }
+      if (msg.type === 'request_restart' && isHost) {
+        // Guest wants to play again — Host can decide
+        document.getElementById('playAgainBtn').textContent = '▶ REMATCH (Guest ready!)';
+      }
     }
 
     function netSend(obj) {
@@ -2392,6 +2395,7 @@
       document.getElementById('codeWrap').style.display = 'none';
       document.getElementById('hostBtn').disabled = false;
       document.getElementById('joinBtn').disabled = false;
+      document.getElementById('playAgainBtn').disabled = false;
     }
 
     function closeLobby() {
@@ -2413,13 +2417,27 @@
     document.getElementById('onlineBtn').addEventListener('click', () => openLobby());
 
     document.getElementById('playAgainBtn').addEventListener('click', () => {
-      initAudio();
-      initGame();
-      document.getElementById('overlay').classList.add('hidden');
-      updateTouchLayout();
+      if (isOnline && netConnected) {
+        if (isHost) {
+          const seed = Math.floor(Math.random() * 999999);
+          netSend({ type: 'start', seed });
+          startOnlineGame(seed, true);
+        } else {
+          netSend({ type: 'request_restart' });
+          document.getElementById('playAgainBtn').textContent = '⌛ WAITING FOR HOST...';
+          document.getElementById('playAgainBtn').disabled = true;
+          setJoinStatus('Rematch requested!', 'wait');
+        }
+      } else {
+        initAudio();
+        initGame();
+        document.getElementById('overlay').classList.add('hidden');
+        updateTouchLayout();
+      }
     });
 
     document.getElementById('backToMenuBtn').addEventListener('click', () => {
+      if (isOnline) netDisconnect();
       showOverlay(false);
     });
 
